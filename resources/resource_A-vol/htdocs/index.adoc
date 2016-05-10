@@ -1,0 +1,18 @@
+= Resource A
+:nofooter:
+
+This is a website served from an Apache httpd container based on https://github.com/clarin-eric/virtual_alpine-apache-shibd[`docker.clarin.eu/alpine-apache-shibd`].
+
+---
+
+* link:unrestricted/resource_A1.html[resource A1] is unrestricted.
+* link:authn_restricted/resource_A2.html[resource A2] requires *authentication* to the CLARIN Identity Provider (IdP).
+* link:authz_restricted/resource_A3.html[resource A3] requires *authorization* as well: the user's e-mail address at the IdP must be `sander @ clarin . eu` (_without spaces_).
+
+---
+
+link:/Shibboleth.sso/Logout[Log out from local Shibboleth session]
+
+link:/Shibboleth.sso/Session[View Shibboleth session info]
+
+link:/Shibboleth.sso/Metadata[View autoproduced SAML metadata about the SP]

@@ -1,0 +1,7 @@
+= Resource A2
+:nofooter:
+
+A true academic, you are?
+At least, you created a CLARIN account. 👌
+
+http://tst-centrale.org/nl/tst-materialen/corpora/lassy-groot-corpus-detail[LASSY Groot corpus]

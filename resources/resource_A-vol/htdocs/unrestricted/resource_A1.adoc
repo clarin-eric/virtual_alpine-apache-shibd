@@ -1,0 +1,6 @@
+= Resource A1
+:nofooter:
+
+Access to this resource has _not_ been restricted with SAML auth.
+
+http://hdl.handle.net/11234/1-1548[Universal Dependencies treebank version 1.2]

@@ -1,0 +1,18 @@
+= Web application B
+:nofooter:
+
+This page introduces a web app served from an Apache httpd container based on https://github.com/clarin-eric/virtual_alpine-apache-shibd[`docker.clarin.eu/alpine-apache-shibd`].
+
+The web app receives SAML attributes via environment variables.
+
+---
+
+Start link:authn_restricted/web_app_B.cgi[web app B] ...
+
+---
+
+link:/Shibboleth.sso/Logout[Log out from local Shibboleth session]
+
+link:/Shibboleth.sso/Session[View Shibboleth session info]
+
+link:/Shibboleth.sso/Metadata[View autoproduced SAML metadata about the SP]

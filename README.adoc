@@ -1,0 +1,205 @@
+= Docker image: Shibboleth SP
+:base_image_URL: https://github.com/clarin-eric/virtual_alpine-apache
+:base_image_version: 0.4.0
+:caution-caption: ☡ CAUTION
+:image_version: 0.1.0
+:important-caption: ❗ IMPORTANT
+:note-caption: 🛈 NOTE
+:sectanchors:
+:sectlinks:
+:sectnumlevels: 6
+:sectnums:
+:source-highlighter: pygments
+:tip-caption: 💡 TIP
+:toc-placement: preamble
+:toc:
+:warning-caption: ⚠ WARNING
+
+A virtualized Shibboleth SP, split up into a `shibd` backend and any number of frontends, possibly running on different hosts.
+
+Dependencies not listed in the following are under link:resources/[`resources/`]. Please issue all of the following shell statements from within the root directory of this repository. Sections with titles starting with A, B, ... are alternative.
+
+== Dependencies
+
+[options="header"]
+|===
+
+| Conditions | Type | Name (URL) | Version constraint
+
+| by default +
+for deployment (sometimes)
+| data
+| CLARIN TLS store under `/root/certstore2/`
+| *
+
+| by default +
+for build and deployment
+| data
+| Shibboleth SP key store under `/root/shibd-keystore/`
+| *
+
+| by default +
+for build and deployment
+| software
+| https://www.docker.com/[Docker]
+| 1.11
+
+| by default +
+for build
+| Docker base image
+| {base_image_URL}/releases/tag/{base_image_version}[`alpine-apache`]
+| {base_image_version}
+
+| by default +
+for build
+| software
+| https://www.gnu.org/software/coreutils/coreutils.html[GNU Core utilities]
+| 8.25
+
+| by default +
+for build
+| software
+| https://packer.io[Packer]
+| 0.10
+
+| by default +
+for build and deployment
+| software
+| https://www.sudo.ws/[Sudo]
+| 1.8
+
+|===
+
+== To build the image
+
+=== Enter a build/deploy environment
+
+IMPORTANT: Mind to choose the appropriate FQDN/virtual host name (`FQDN`) for Apache httpd in the following.
+
+[source,sh,subs="attributes"]
+----
+env \
+  CONT_NAME='SPF_SP_demo' \
+  FQDN='test-sp.clarin.eu' \
+  IMAGE_NAME='alpine-apache-shibd' \
+  IMAGE_TAG='{image_version}' \
+  NET_NAME='SPF_SP_demo-net' \
+  REGISTRY='docker.clarin.eu' \
+  SHIBD_BACKEND_IP='192.168.0.2' \
+  SHIBD_BACKEND_IP_CIDR='192.168.0.0/16' \
+  VOL_RESOURCE_A='resource_A-vol' \
+  VOL_SHIBD_KEYSTORE='shibd_keystore-vol' \
+  VOL_WEB_APP_B='web_app_B-vol' \
+    sh
+----
+
+=== Create the container network
+
+You can create container networks that span physical networks.
+
+WARNING: The container network you create must be secure and low-latency.
+
+To create a host-local network:
+
+[source,sh]
+----
+sudo docker network \
+  create \
+  --driver='bridge' \
+  --subnet="$SHIBD_BACKEND_IP_CIDR" \
+  "$NET_NAME"
+----
+
+=== Build the image
+
+See link:{base_image_URL}/blob/{base_image_version}/README.adoc#sec_build[the README of the base image].
+
+== To deploy the container
+
+=== Set up the data volumes
+
+See link:{base_image_URL}/blob/{base_image_version}/README.adoc#sec_data_volume[the README of the base image].
+
+==== Set up the `shibd` key store data volume
+
+// TODO:
+NOTE: A usable presentation of this information is forthcoming.
+
+==== Set up the resource A `htdocs/` data volume
+
+// TODO:
+NOTE: A usable presentation of this information is forthcoming.
+
+==== Set up the web app B `htdocs/` web data
+
+// TODO:
+NOTE: A usable presentation of this information is forthcoming.
+
+=== Configure the containers
+
+==== `shibd` backend
+
+CAUTION: One `shibd` backend container must be started before any frontend, in order for static IP address assignment to succeed, which is critical (by default) for successful container creation.
+
+[source,sh]
+----
+sudo docker create \
+  --entrypoint='/usr/local/bin/dumb-init' \
+  --hostname="$FQDN" \
+  --ip="$SHIBD_BACKEND_IP" \
+  --name="$CONT_NAME"-shibd \
+  --net="$NET_NAME" \
+  --restart='unless-stopped' \
+  --volume="$VOL_SHIBD_KEYSTORE"':/home/shibd/shibd_keystore/:ro' \
+  "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
+    --single-child \
+    /usr/local/sbin/shibd -f -u shibd -g shibd -F
+----
+
+==== Resource A `mod_shib` frontend
+
+[source,sh]
+----
+sudo docker create \
+  --entrypoint='/usr/local/bin/dumb-init' \
+  --hostname="resource_a.clarin.eu" \
+  --name="$CONT_NAME"-resource_A \
+  --net="$NET_NAME" \
+  --publish='443:443' \
+  --publish='80:80' \
+  --restart='unless-stopped' \
+  --volume="$VOL_RESOURCE_A"':/var/www/localhost/htdocs/:ro' \
+  --volume='/root/certstore2/:/root/certstore2/:ro' \
+  "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
+    --single-child \
+    /usr/sbin/httpd -D 'FOREGROUND'
+----
+
+==== Web app B `mod_shib` frontend
+
+[source,sh]
+----
+sudo docker create \
+  --entrypoint='/usr/local/bin/dumb-init' \
+  --hostname="web_app_b.clarin.eu" \
+  --name="$CONT_NAME"-web_app_B \
+  --net="$NET_NAME" \
+  --publish='443:443' \
+  --publish='80:80' \
+  --restart='unless-stopped' \
+  --volume="$VOL_WEB_APP_B"':/var/www/localhost/htdocs/:ro' \
+  --volume='/root/certstore2/:/root/certstore2/:ro' \
+  "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
+    --single-child \
+    /usr/sbin/httpd -D 'FOREGROUND'
+----
+
+// TODO:
+NOTE: The container "$CONT_NAME"-web_app_B` still requires two small modifications. A usable presentation of this information is forthcoming.
+
+=== Start the containers
+
+[source,sh]
+----
+sudo docker start "$CONT_NAME"-shibd "$CONT_NAME"-resource_A "$CONT_NAME"-web_app_B
+----

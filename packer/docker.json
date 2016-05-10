@@ -1,0 +1,47 @@
+{
+    "variables": {
+        "FQDN": "{{env `FQDN`}}",
+        "IMAGE_NAME": "{{env `IMAGE_NAME`}}",
+        "IMAGE_TAG": "{{env `IMAGE_TAG`}}",
+        "REGISTRY": "{{env `REGISTRY`}}",
+        "SHIBD_BACKEND_IP": "{{env `SHIBD_BACKEND_IP`}}",
+        "SHIBD_BACKEND_IP_CIDR": "{{env `SHIBD_BACKEND_IP_CIDR`}}",
+        "VOL_SHIBD_KEYSTORE": "{{env `VOL_SHIBD_KEYSTORE`}}"
+    },
+    "builders": [
+        {
+            "commit": true,
+            "image":  "docker.clarin.eu/alpine-apache:0.4.0",
+            "name": "{{user `IMAGE_NAME`}}",
+            "pull": false,
+            "run_command": [
+                "--hostname={{user `FQDN`}}",
+                "--volume={{user `VOL_SHIBD_KEYSTORE`}}:/home/shibd/shibd_keystore/:rw",
+                "--volume=/srv/build/",
+                "-d", "-i", "-t", "{{.Image}}", "/bin/sh"
+            ],
+            "type": "docker"
+        }
+    ],
+    "provisioners": [
+        {
+            "environment_vars": [
+                "LANG=en_US.UTF-8",
+                "LC_ALL=en_US.UTF-8",
+                "LANGUAGE=en_US.UTF-8",
+                "SHIBD_BACKEND_IP={{user `SHIBD_BACKEND_IP`}}",
+                "SHIBD_BACKEND_IP_CIDR={{user `SHIBD_BACKEND_IP_CIDR`}}"],
+            "scripts": [
+                "{{template_dir}}/../provision.sh"
+            ],
+            "type": "shell"
+        }
+    ],
+    "post-processors": [
+        {
+            "repository": "{{user `REGISTRY`}}/{{user `IMAGE_NAME`}}",
+            "tag": "{{user `IMAGE_TAG`}}",
+            "type": "docker-tag"
+        }
+    ]
+}
