@@ -68,6 +68,12 @@ for build and deployment
 | https://www.sudo.ws/[Sudo]
 | 1.8
 
+| optional +
+for deployment
+| software
+| https://github.com/sanmai-NL/vol[vol]
+| *
+
 |===
 
 == To build the image
@@ -122,18 +128,33 @@ See link:{base_image_URL}/blob/{base_image_version}/README.adoc#sec_data_volume[
 
 ==== Set up the `shibd` key store data volume
 
-// TODO:
-NOTE: A usable presentation of this information is forthcoming.
+Make sure it contains at least these file, owner, permissions combinations. Issue e.g.:
+
+```
+sudo vol_ls.sh "$VOL_SHIBD_KEYSTORE"
+```
+And verify:
+```
+total 16
+drwxr-xr-x    2 root     root          59 May 10 12:01 .
+drwxr-xr-x   17 root     root        4.0K May 13 12:57 ..
+-r--------    1 100      101         1.2K May 10 09:12 sp-cert.pem
+-r--------    1 100      101         1.7K May 10 09:12 sp-key.pem
+```
 
 ==== Set up the resource A `htdocs/` data volume
 
-// TODO:
-NOTE: A usable presentation of this information is forthcoming.
+Issue e.g.:
+```
+sudo dir_out.sh "resources/$VOL_RESOURCE_A/" | sudo vol_in.sh "$VOL_RESOURCE_A"
+```
 
 ==== Set up the web app B `htdocs/` web data
 
-// TODO:
-NOTE: A usable presentation of this information is forthcoming.
+Issue e.g.:
+```
+sudo dir_out.sh "resources/$VOL_WEB_APP_B/" | sudo vol_in.sh "$VOL_WEB_APP_B"
+```
 
 === Configure the containers
 
@@ -153,7 +174,7 @@ sudo docker create \
   --volume="$VOL_SHIBD_KEYSTORE"':/home/shibd/shibd_keystore/:ro' \
   "$REGISTRY/$IMAGE_NAME:$IMAGE_TAG" \
     --single-child \
-    /usr/local/sbin/shibd -f -u shibd -g shibd -F
+    /usr/local/sbin/shibd -f -u 'shibd' -g 'shibd' -F
 ----
 
 ==== Resource A `mod_shib` frontend
@@ -162,7 +183,7 @@ sudo docker create \
 ----
 sudo docker create \
   --entrypoint='/usr/local/bin/dumb-init' \
-  --hostname="resource_a.clarin.eu" \
+  --hostname="resource-a.clarin.eu" \
   --name="$CONT_NAME"-resource_A \
   --net="$NET_NAME" \
   --publish='443:443' \
@@ -181,7 +202,7 @@ sudo docker create \
 ----
 sudo docker create \
   --entrypoint='/usr/local/bin/dumb-init' \
-  --hostname="web_app_b.clarin.eu" \
+  --hostname="web-app-b.clarin.eu" \
   --name="$CONT_NAME"-web_app_B \
   --net="$NET_NAME" \
   --publish='443:443' \
