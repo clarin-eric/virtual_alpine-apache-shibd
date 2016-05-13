@@ -130,13 +130,13 @@ You may want to use https://github.com/sanmai-NL/vol[vol] to make it easier. See
 
 This data volume should contain the cryptographic key pair used by Shibboleth SP.
 It should be produced by yourself.
-link:resources/shibd_keystore-vol/sp-cer.cnf[An example configuration file] is provided here to make this easier to do.
+link:resources/shibd_keystore-vol/sp-cert.cnf[An example configuration file] is provided here to make this easier to do.
 
 Create the key pair:
 
 [source,sh]
 ----
-sudo mkdir -m 'a=,u=rwx' `/root/shibd_keystore/` &&
+sudo mkdir -m 'a=,u=rwx' '/root/shibd_keystore/' &&
 (umask 'a=,u=r' &&
 sudo openssl req \
     -config 'resources/'"$VOL_SHIBD_KEYSTORE"'/sp-cert.cnf' \
@@ -144,7 +144,7 @@ sudo openssl req \
     -new -x509 \
     -keyout '/root/shibd_keystore/sp-key.pem' \
     -out '/root/shibd_keystore/sp-cert.pem') &&
-chown -Rv '100:101' '/root/shibd_keystore/'
+sudo chown -Rv '100:101' '/root/shibd_keystore/'
 ----
 
 And then copy it into the `shibd` key store data volume:
@@ -154,19 +154,16 @@ And then copy it into the `shibd` key store data volume:
 sudo dir_out.sh "resources/$VOL_SHIBD_KEYSTORE/" | sudo vol_in.sh "$VOL_SHIBD_KEYSTORE"
 ----
 
-Now the following command
+Now the output of the following command
 
 [source,sh]
 ----
 sudo vol_ls.sh "$VOL_SHIBD_KEYSTORE"
 ----
 
-should list:
+should at minimum contain:
 
 ----
-total 16
-drwxr-xr-x    2 root     root          59 May 10 12:01 .
-drwxr-xr-x   17 root     root        4.0K May 13 12:57 ..
 -r--------    1 100      101         1.2K May 10 09:12 sp-cert.pem
 -r--------    1 100      101         1.7K May 10 09:12 sp-key.pem
 ----
