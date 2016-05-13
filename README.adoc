@@ -124,37 +124,68 @@ See link:{base_image_URL}/blob/{base_image_version}/README.adoc#sec_build[the RE
 
 === Set up the data volumes
 
-See link:{base_image_URL}/blob/{base_image_version}/README.adoc#sec_data_volume[the README of the base image].
+You may want to use https://github.com/sanmai-NL/vol[vol] to make it easier. See its documentation.
 
 ==== Set up the `shibd` key store data volume
 
-Make sure it contains at least these file, owner, permissions combinations. Issue e.g.:
+This data volume should contain the cryptographic key pair used by Shibboleth SP.
+It should be produced by yourself.
+link:resources/shibd_keystore-vol/sp-cer.cnf[An example configuration file] is provided here to make this easier to do.
 
-```
+Create the key pair:
+
+[source,sh]
+----
+sudo mkdir -m 'a=,u=rwx' `/root/shibd_keystore/` &&
+(umask 'a=,u=r' &&
+sudo openssl req \
+    -config 'resources/'"$VOL_SHIBD_KEYSTORE"'/sp-cert.cnf' \
+    -days '3650' \
+    -new -x509 \
+    -keyout '/root/shibd_keystore/sp-key.pem' \
+    -out '/root/shibd_keystore/sp-cert.pem') &&
+chown -Rv '100:101' '/root/shibd_keystore/'
+----
+
+And then copy it into the `shibd` key store data volume:
+
+[source,sh]
+----
+sudo dir_out.sh "resources/$VOL_SHIBD_KEYSTORE/" | sudo vol_in.sh "$VOL_SHIBD_KEYSTORE"
+----
+
+Now the following command
+
+[source,sh]
+----
 sudo vol_ls.sh "$VOL_SHIBD_KEYSTORE"
-```
-And verify:
-```
+----
+
+should list:
+
+----
 total 16
 drwxr-xr-x    2 root     root          59 May 10 12:01 .
 drwxr-xr-x   17 root     root        4.0K May 13 12:57 ..
 -r--------    1 100      101         1.2K May 10 09:12 sp-cert.pem
 -r--------    1 100      101         1.7K May 10 09:12 sp-key.pem
-```
+----
 
 ==== Set up the resource A `htdocs/` data volume
 
 Issue e.g.:
-```
+
+----
 sudo dir_out.sh "resources/$VOL_RESOURCE_A/" | sudo vol_in.sh "$VOL_RESOURCE_A"
-```
+----
 
 ==== Set up the web app B `htdocs/` web data
 
 Issue e.g.:
-```
+
+----
 sudo dir_out.sh "resources/$VOL_WEB_APP_B/" | sudo vol_in.sh "$VOL_WEB_APP_B"
-```
+----
 
 === Configure the containers
 
