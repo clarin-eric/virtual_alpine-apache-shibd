@@ -151,7 +151,7 @@ And then copy it into the `shibd` key store data volume:
 
 [source,sh]
 ----
-sudo dir_out.sh "resources/$VOL_SHIBD_KEYSTORE/" | sudo vol_in.sh "$VOL_SHIBD_KEYSTORE"
+sudo dir_out.sh '/root/shibd_keystore/' | sudo vol_in.sh "$VOL_SHIBD_KEYSTORE"
 ----
 
 Now the output of the following command
